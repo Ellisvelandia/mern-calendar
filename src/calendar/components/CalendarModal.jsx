@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { addHours, differenceInSeconds } from "date-fns";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
@@ -7,6 +7,7 @@ import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import es from "date-fns/locale/es";
 import { useUiStore } from "../../hooks/useUiStore";
+import { useCalendarStore } from "../../hooks/useCalendarStore";
 registerLocale("es", es);
 
 const customStyles = {
@@ -26,30 +27,32 @@ const CalendarModal = () => {
   const { isDateModalOpen, closeDateModal } = useUiStore();
   const [formSubmitted, setformSubmitted] = useState(false);
 
+  const { activeEvent, startSavingEvent } = useCalendarStore();
+
   const [formValue, setFormValue] = useState({
-    title: "Ellis",
-    notes: "Velandia",
+    title: "",
+    notes: "",
     start: new Date(),
     end: addHours(new Date(), 2),
   });
 
   const titleClass = useMemo(() => {
-    if (!formSubmitted) {
-      return "";
-    }
+    if (!formSubmitted) return "";
 
-    return formValue.title.length > 0 ? "is-valid" : "is-invalid";
+    return formValue.title.length > 0 ? "" : "is-invalid";
   }, [formValue.title, formSubmitted]);
+
+  useEffect(() => {
+    if (activeEvent !== null) {
+      setFormValue({ ...activeEvent });
+    }
+  }, [activeEvent]);
 
   const onInputChanged = ({ target }) => {
     setFormValue({
       ...formValue,
       [target.name]: target.value,
     });
-  };
-
-  const onCloseModal = () => {
-    closeDateModal()
   };
 
   const onDateChanged = (event, changing) => {
@@ -59,17 +62,26 @@ const CalendarModal = () => {
     });
   };
 
-  const onSubmit = (event) => {
+  const onCloseModal = () => {
+    closeDateModal();
+  };
+
+  const onSubmit = async (event) => {
     event.preventDefault();
     setformSubmitted(true);
 
     const difference = differenceInSeconds(formValue.end, formValue.start);
+
     if (isNaN(difference) || difference <= 0) {
-      Swal.fire("Fechas incorrectas, Revisar las fechas", "error");
+      Swal.fire("Fechas incorrectas", "Revisar las fechas ingresadas", "error");
       return;
     }
 
     if (formValue.title.length <= 0) return;
+
+    await startSavingEvent(formValue);
+    closeDateModal();
+    setformSubmitted(false);
   };
 
   return (
@@ -93,7 +105,7 @@ const CalendarModal = () => {
             dateFormat="Pp"
             showTimeSelect
             locale="es"
-            timeCaption="es"
+            timeCaption="Hora"
           />
         </div>
 
@@ -107,7 +119,7 @@ const CalendarModal = () => {
             dateFormat="Pp"
             showTimeSelect
             locale="es"
-            timeCaption="es"
+            timeCaption="Hora"
           />
         </div>
 

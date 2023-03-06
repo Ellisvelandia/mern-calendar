@@ -22,7 +22,7 @@ const LoginPages = () => {
                 placeholder="Contraseña"
               />
             </div>
-            <div className="form-group mb-2">
+            <div className="d-grid gap-2">
               <input type="submit" className="btnSubmit" value="Login" />
             </div>
           </form>
@@ -61,7 +61,7 @@ const LoginPages = () => {
               />
             </div>
 
-            <div className="form-group mb-2">
+            <div className="d-grid gap-2">
               <input type="submit" className="btnSubmit" value="Crear cuenta" />
             </div>
           </form>
